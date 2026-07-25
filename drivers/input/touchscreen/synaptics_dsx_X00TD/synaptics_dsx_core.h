@@ -346,6 +346,9 @@ struct synaptics_rmi4_device_info {
  * @f11_wakeup_gesture: flag to indicate support for wakeup gestures in F$11
  * @f12_wakeup_gesture: flag to indicate support for wakeup gestures in F$12
  * @enable_wakeup_gesture: flag to indicate usage of wakeup gestures
+ * @gesture_wake_configured: flag to indicate enable_wakeup_gesture's default
+ *  has already been applied once at probe, so later re-inits (resume,
+ *  spontaneous reset recovery) don't clobber a runtime toggle
  * @wedge_sensor: flag to indicate use of wedge sensor
  * @report_pressure: flag to indicate reporting of pressure data
  * @stylus_enable: flag to indicate reporting of stylus data
@@ -417,6 +420,7 @@ struct synaptics_rmi4_data {
 	bool f11_wakeup_gesture;
 	bool f12_wakeup_gesture;
 	bool enable_wakeup_gesture;
+	bool gesture_wake_configured;
 	bool wedge_sensor;
 	bool report_pressure;
 	bool stylus_enable;

@@ -77,7 +77,7 @@
 #define USE_DATA_SERVER
 */
 
-#define WAKEUP_GESTURE false
+#define WAKEUP_GESTURE true
 
 #define NO_0D_WHILE_2D
 #define REPORT_2D_Z
@@ -3619,10 +3619,13 @@ flash_prog_mode:
 		}
 	}
 
-	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture)
-		rmi4_data->enable_wakeup_gesture = WAKEUP_GESTURE;
-	else
-		rmi4_data->enable_wakeup_gesture = false;
+	if (!rmi4_data->gesture_wake_configured) {
+		if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture)
+			rmi4_data->enable_wakeup_gesture = WAKEUP_GESTURE;
+		else
+			rmi4_data->enable_wakeup_gesture = false;
+		rmi4_data->gesture_wake_configured = true;
+	}
 
 	synaptics_rmi4_set_configured(rmi4_data);
 
