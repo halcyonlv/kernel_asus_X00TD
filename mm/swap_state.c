@@ -306,7 +306,6 @@ void clear_shadow_from_swap_cache(int type, unsigned long begin,
 	unsigned long curr = begin;
 
 	for (;;) {
-		unsigned long index;
 		void *item;
 		swp_entry_t entry = swp_entry(type, curr);
 		struct address_space *address_space = swap_address_space(entry);
