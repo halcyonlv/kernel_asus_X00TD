@@ -308,9 +308,9 @@ void clear_shadow_from_swap_cache(int type, unsigned long begin,
 	for (;;) {
 		unsigned long index;
 		void *item;
-		XA_STATE(xas, &address_space->i_pages, curr);
 		swp_entry_t entry = swp_entry(type, curr);
 		struct address_space *address_space = swap_address_space(entry);
+		XA_STATE(xas, &address_space->i_pages, curr);
 
 		xa_lock_irq(&address_space->i_pages);
 		xas_for_each(&xas, item, end) {
