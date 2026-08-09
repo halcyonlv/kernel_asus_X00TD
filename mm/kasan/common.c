@@ -609,8 +609,14 @@ int kasan_module_alloc(void *addr, size_t size)
 			__builtin_return_address(0));
 
 	if (ret) {
+		struct vm_struct *vm = find_vm_area(addr);
+
 		__memset(ret, KASAN_SHADOW_INIT, shadow_size);
-		find_vm_area(addr)->flags |= VM_KASAN;
+		if (WARN_ON(!vm)) {
+			vfree(ret);
+			return -EINVAL;
+		}
+		vm->flags |= VM_KASAN;
 		kmemleak_ignore(ret);
 		return 0;
 	}
