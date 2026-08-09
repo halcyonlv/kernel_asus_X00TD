@@ -215,7 +215,8 @@ bool should_ulmk_retry(gfp_t gfp_mask)
 		psi_emerg_trigger_jiffies = now;
 		ret = true;
 	} else if (wdog_expired) {
-		mutex_lock(&oom_lock);
+		if (mutex_lock_killable(&oom_lock))
+			return true;
 		ret = out_of_memory(&oc);
 		mutex_unlock(&oom_lock);
 		BUG_ON(!ret && ulmk_dbg_policy & ULMK_DBG_POLICY_POSITIVE_ADJ);
