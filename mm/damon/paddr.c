@@ -465,17 +465,16 @@ static inline unsigned long damon_pa_mark_accessed_or_deactivate(
 			mark_page_accessed(page);
 		} else {
 			/*
-			 * [4.19 backport - CONFIRMED GAP]
-			 * deactivate_page() doesn't exist in this kernel -
-			 * only the older, file-pages-only
-			 * deactivate_file_page() does (checked directly in
-			 * include/linux/swap.h). Using that here would
-			 * silently do nothing for anonymous pages, which is
-			 * most of what DAMON typically targets - worse than
-			 * an honest no-op, so DAMOS_LRU_DEPRIO stays
-			 * unimplemented rather than partially/silently
-			 * working only for file-backed memory.
+			 * [4.19 backport - PARTIAL IMPLEMENTATION]
+			 * deactivate_page() doesn't exist in this kernel.
+			 * Use deactivate_file_page() for file-backed pages,
+			 * which provides partial DAMOS_LRU_DEPRIO functionality.
+			 * Anonymous pages are skipped with a warn_once.
 			 */
+			if (!PageAnon(page))
+				deactivate_file_page(page);
+			else
+				pr_warn_once("DAMOS_LRU_DEPRIO: anon pages not supported in 4.19\n");
 		}
 		applied += hpage_nr_pages(page);
 put_page:
