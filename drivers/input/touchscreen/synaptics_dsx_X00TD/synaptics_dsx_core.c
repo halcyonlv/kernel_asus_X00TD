@@ -77,7 +77,7 @@
 #define USE_DATA_SERVER
 */
 
-#define WAKEUP_GESTURE true
+#define WAKEUP_GESTURE false
 
 #define NO_0D_WHILE_2D
 #define REPORT_2D_Z
@@ -1056,13 +1056,8 @@ static ssize_t synaptics_rmi4_wake_gesture_store(struct device *dev,
 
 	input = input > 0 ? 1 : 0;
 
-	/*
-	 * Double Tap to Wake is forced permanently on for this build -
-	 * ignore requests to disable it (input == 0); only allow this
-	 * node to (redundantly) enable it.
-	 */
 	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture)
-		rmi4_data->enable_wakeup_gesture = 1;
+		rmi4_data->enable_wakeup_gesture = input;
 
 	return count;
 }
@@ -1111,7 +1106,7 @@ static ssize_t synaptics_rmi4_virtual_key_map_show(struct kobject *kobj,
 
 /* Huaqin modify  for ZQL1650-1523 by diganyun at 2018/06/07 start */
 
-long syna_gesture_mode = 0x1FF;
+long syna_gesture_mode = 0;
 struct synaptics_rmi4_data *syna_rmi4_data;
 
 static ssize_t syna_gesture_mode_get_proc(struct file *file,
@@ -1134,21 +1129,16 @@ static ssize_t syna_gesture_mode_set_proc(struct file *filp,
                         const char __user *buffer, size_t count, loff_t *off)
 {
 	int ret = 0;
-	long requested_mode = 0;
 
-	ret = kstrtol_from_user(buffer, count, 0, &requested_mode);
+	ret = kstrtol_from_user(buffer, count, 0, &syna_gesture_mode);
 	if (!ret) {
-		/*
-		 * Double Tap to Wake is forced permanently on for this
-		 * build - ignore any request to disable it (requested_mode
-		 * == 0) instead of trusting whatever the touch-gesture HAL/
-		 * Settings client writes here. This node still accepts
-		 * "enable" writes (kept as a no-op) so nothing breaks if
-		 * userspace calls it, but it can no longer turn the gesture
-		 * off.
-		 */
-		syna_gesture_mode = 0x1FF;
-		syna_rmi4_data->enable_wakeup_gesture = 1;
+		if (syna_gesture_mode == 0) {
+			syna_gesture_mode = 0;
+			syna_rmi4_data->enable_wakeup_gesture = 0;
+		} else {
+			syna_gesture_mode = 0x1FF;
+			syna_rmi4_data->enable_wakeup_gesture = 1;
+		}
 	}
 	else {
 		pr_err("set gesture mode failed\n");
@@ -3629,13 +3619,10 @@ flash_prog_mode:
 		}
 	}
 
-	if (!rmi4_data->gesture_wake_configured) {
-		if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture)
-			rmi4_data->enable_wakeup_gesture = WAKEUP_GESTURE;
-		else
-			rmi4_data->enable_wakeup_gesture = false;
-		rmi4_data->gesture_wake_configured = true;
-	}
+	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture)
+		rmi4_data->enable_wakeup_gesture = WAKEUP_GESTURE;
+	else
+		rmi4_data->enable_wakeup_gesture = false;
 
 	synaptics_rmi4_set_configured(rmi4_data);
 
